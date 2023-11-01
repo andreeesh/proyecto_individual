@@ -18,11 +18,15 @@ def PlayTimeGenre(genre: str):
 
     merged_df = pd.merge(df_steam_games, df_users_items,
                          left_on='id', right_on='item_id')
+    del df_steam_games
+    del df_users_items
     filtered_df = merged_df[merged_df['genres'].str.contains(genre)]
+    del merged_df
 
     if not filtered_df.empty:
         grouped_df = filtered_df.groupby('release_year')[
             'playtime_forever'].sum()
+        del filtered_df
         max_playtime_year = grouped_df.idxmax()
         return {f"El año de lanzamiento con la mayor cantidad de horas jugadas para el género {genre} es el {max_playtime_year}"}
     else:
