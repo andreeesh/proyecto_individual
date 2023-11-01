@@ -6,38 +6,31 @@ app = FastAPI()
 
 @app.get("/PlayTimeGenre/{genre}")
 def PlayTimeGenre(genre: str):
-    chunk_size = 10000  # Tamaño de chunk para lectura de parquet
+    df_steam_games = pd.read_parquet(
+        "data_sources/parquet/steam_games.parquet")
+    df_users_items = pd.read_parquet(
+        "data_sources/parquet/users_items.parquet")
 
-    # Utiliza chunks para cargar los datos en bloques
-    steam_games_reader = pd.read_parquet(
-        "data_sources/parquet/steam_games.parquet", chunksize=chunk_size)
-    users_items_reader = pd.read_parquet(
-        "data_sources/parquet/users_items.parquet", chunksize=chunk_size)
+    # Convierte el tipo de dato para poder hacer el merge
+    df_steam_games['id'] = df_steam_games['id'].astype(int)
+    df_steam_games['genres'] = df_steam_games['genres'].astype(str)
+    df_users_items['item_id'] = df_users_items['item_id'].astype(int)
 
-    merged_data = pd.DataFrame()
-    for chunk_steam_games in steam_games_reader:
-        for chunk_users_items in users_items_reader:
-            chunk_steam_games['id'] = chunk_steam_games['id'].astype(int)
-            chunk_steam_games['genres'] = chunk_steam_games['genres'].astype(
-                str)
-            chunk_users_items['item_id'] = chunk_users_items['item_id'].astype(
-                int)
+    merged_df = pd.merge(df_steam_games, df_users_items,
+                         left_on='id', right_on='item_id')
+    del df_steam_games
+    del df_users_items
+    filtered_df = merged_df[merged_df['genres'].str.contains(genre)]
+    del merged_df
 
-            merged_chunk = pd.merge(
-                chunk_steam_games, chunk_users_items, left_on='id', right_on='item_id')
-            filtered_chunk = merged_chunk[merged_chunk['genres'].str.contains(
-                genre)]
-
-            if not filtered_chunk.empty:
-                grouped_chunk = filtered_chunk.groupby(
-                    'release_year')['playtime_forever'].sum()
-                max_playtime_year = grouped_chunk.idxmax()
-                del grouped_chunk
-                return {f"El año de lanzamiento con la mayor cantidad de horas jugadas para el género {genre} es el {max_playtime_year}"}
-            else:
-                return {f"No se encontraron registros para el género {genre}"}
-
-    return {f"No se encontraron registros para el género {genre}"}
+    if not filtered_df.empty:
+        grouped_df = filtered_df.groupby('release_year')[
+            'playtime_forever'].sum()
+        del filtered_df
+        max_playtime_year = grouped_df.idxmax()
+        return {f"El año de lanzamiento con la mayor cantidad de horas jugadas para el género {genre} es el {max_playtime_year}"}
+    else:
+        return {f"No se encontraron registros para el género {genre}"}
 
 
 @app.get("/UserForGenre/{genre}")
