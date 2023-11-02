@@ -7,8 +7,8 @@ import os
 app = FastAPI()
 
 
-@app.get("/EtlPlayTimeGenre")
-async def EtlPlayTimeGenre():
+@app.get("/StorePlayTimeGenre")
+async def StorePlayTimeGenre():
     # Conexión a la base de datos
     conn = sqlite3.connect('data_sources/steam.db')
     cursor = conn.cursor()
@@ -30,6 +30,84 @@ async def EtlPlayTimeGenre():
 
     # Crear un índice en una tabla
     cursor.execute('CREATE INDEX genres_index ON play_time_genre (genres);')
+
+    # Cerrar la conexión
+    conn.close()
+
+
+@app.get("/StoreSteamGames")
+async def StoreSteamGames():
+    # Conexión a la base de datos
+    conn = sqlite3.connect('data_sources/steam.db')
+
+    # Directorio que contiene los archivos Parquet
+    dir = 'data_sources/parquet/steam_games'
+
+    # Recorrer los archivos Parquet en el directorio
+    for file in os.listdir(dir):
+        if file.endswith('.parquet'):
+            # Leer el archivo Parquet
+            df = pq.read_table(os.path.join(dir, file)).to_pandas()
+            df['genres'] = df['genres'].astype(str)
+
+            # Almacenar los datos en la base de datos SQLite
+            df.to_sql('steam_games', conn, if_exists='append', index=False)
+
+    # Confirmar y cerrar la conexión a la base de datos SQLite
+    conn.commit()
+
+    # Cerrar la conexión
+    conn.close()
+
+
+@app.get("/StoreUserItems")
+async def StoreUserItems():
+    # Conexión a la base de datos
+    conn = sqlite3.connect('data_sources/steam.db')
+
+    # Directorio que contiene los archivos Parquet
+    dir = 'data_sources/parquet/user_items'
+
+    # Recorrer los archivos Parquet en el directorio
+    for file in os.listdir(dir):
+        if file.endswith('.parquet'):
+            # Leer el archivo Parquet
+            df = pq.read_table(os.path.join(dir, file)).to_pandas()
+
+            # Almacenar los datos en la base de datos SQLite
+            df.to_sql('user_items', conn, if_exists='append', index=False)
+
+    # Confirmar y cerrar la conexión a la base de datos SQLite
+    conn.commit()
+
+    # Cerrar la conexión
+    conn.close()
+
+
+@app.get("/StoreUserReviews")
+async def StoreUserReviews():
+    # Conexión a la base de datos
+    conn = sqlite3.connect('data_sources/steam.db')
+
+    # Directorio que contiene los archivos Parquet
+    dir = 'data_sources/parquet/user_reviews'
+
+    counter = 1
+
+    # Recorrer los archivos Parquet en el directorio
+    for file in os.listdir(dir):
+        if file.endswith('.parquet'):
+            if counter <= 100:
+                # Leer el archivo Parquet
+                df = pq.read_table(os.path.join(dir, file)).to_pandas()
+
+                # Almacenar los datos en la base de datos SQLite
+                df.to_sql('user_reviews', conn,
+                          if_exists='append', index=False)
+            counter += 1
+
+    # Confirmar y cerrar la conexión a la base de datos SQLite
+    conn.commit()
 
     # Cerrar la conexión
     conn.close()
@@ -69,76 +147,72 @@ async def PlayTimeGenre(genre: str):
 
 
 @app.get("/UserForGenre/{genre}")
-def UserForGenre(genre: str):
-    df_steam_games = pd.read_parquet(
-        "data_sources/parquet/steam_games.parquet")
-    df_users_items = pd.read_parquet(
-        "data_sources/parquet/users_items.parquet")
+async def UserForGenre(genre: str):
+    # Encontrar el usuario con más horas jugadas para el género dado relacionando las tablas steam_games y user_items
+    # Conectar a la base de datos SQLite
+    conn = sqlite3.connect('data_sources/steam.db')
+    cursor = conn.cursor()
 
-    # Convierte el tipo de dato para poder hacer el merge
-    df_steam_games['id'] = df_steam_games['id'].astype(int)
-    df_steam_games['genres'] = df_steam_games['genres'].astype(str)
-    df_users_items['item_id'] = df_users_items['item_id'].astype(int)
+    # Ejecutar la consulta SQL
+    query = f"""
+		SELECT user_id, SUM(playtime_forever) AS total_playtime
+		FROM user_items
+		WHERE item_id IN (
+			SELECT id
+			FROM steam_games
+			WHERE genres LIKE '%{genre}%'
+		)
+		GROUP BY user_id
+		ORDER BY total_playtime DESC
+		LIMIT 1;
+	"""
 
-    merged_df = pd.merge(df_steam_games, df_users_items,
-                         left_on='id', right_on='item_id')
+    # Ejecutar la consulta y obtener resultados
+    cursor.execute(query)
+    result = cursor.fetchone()
 
-    filtered_df = merged_df[merged_df['genres'].str.contains(genre)]
+    # Cerrar la conexión
+    conn.close()
 
-    if not filtered_df.empty:
-        # Encontrar el usuario con más horas jugadas para el género dado
-        max_playtime_user = filtered_df.groupby(
-            'user_id')['playtime_forever'].sum().idxmax()
-
-        # Filtro el dataframe por el usuario con mas horas jugadas
-        user_filtered_df = filtered_df[filtered_df['user_id']
-                                       == max_playtime_user]
-
-        # Calcular la acumulación de horas jugadas por año
-        hours_by_year = user_filtered_df.groupby(
-            'release_year')['playtime_forever'].sum().reset_index()
-        hours_by_year = hours_by_year.rename(
-            columns={'release_year': 'Año', 'playtime_forever': 'Horas'})
-        hours_list = hours_by_year.to_dict(orient='records')
-
-        # Crear el diccionario de retorno
-        result = {
-            "Usuario con más horas jugadas para " + genre: max_playtime_user,
-            "Horas jugadas": hours_list
-        }
+    if result:
+        user_id = result[0]
+        tota_played_hours = result[1]
+        return {
+            f"El usuario con más horas jugadas para el género '{genre}' es {user_id} con un total de {tota_played_hours} horas jugadas."}
     else:
-        result = {f"No se encontraron registros para el género {genre}"}
-    return result
+        return {
+            f"No se encontraron datos para el género '{genre}' en la base de datos."}
 
 
 @app.get("/UsersRecommend/{year}")
-def UsersRecommend(year: str):
-    df_steam_games = pd.read_parquet(
-        "data_sources/parquet/steam_games.parquet")
-    df_users_reviews = pd.read_parquet(
-        "data_sources/parquet/users_reviews.parquet")
+async def UsersRecommend(year: str):
+    # Muestra los 3 juegos mas recomendados para un año dado en la tabla user_reviews teniendo en cuenta que el campo recommend sea true
+    # y el campo review sea diferente de 1 trayendo el nombre del juego de la tabla steam_games
+    # Conectar a la base de datos SQLite
+    conn = sqlite3.connect('data_sources/steam.db')
+    cursor = conn.cursor()
 
-    df_steam_games['id'] = df_steam_games['id'].astype(int)
-    df_users_reviews['item_id'] = df_users_reviews['item_id'].astype(int)
+    # Ejecutar la consulta SQL
+    query = f"""
+		SELECT steam_games.title
+		FROM user_reviews
+		INNER JOIN steam_games ON user_reviews.item_id = steam_games.id
+		WHERE user_reviews.recommend = true AND user_reviews.review != 1 AND user_reviews.posted LIKE '%{year}%'
+		GROUP BY user_reviews.item_id
+		ORDER BY COUNT(user_reviews.item_id) DESC
+		LIMIT 3;
+	"""
 
-    merged_df = pd.merge(df_steam_games, df_users_reviews,
-                         left_on='id', right_on='item_id')
+    # Ejecutar la consulta y obtener resultados
+    cursor.execute(query)
+    result = cursor.fetchall()
 
-    df_filtered_by_year = merged_df[merged_df["posted"].str.contains(year)]
+    # Cerrar la conexión
+    conn.close()
 
-    if not df_filtered_by_year.empty:
-        df_filtered_by_recommend = df_filtered_by_year[df_filtered_by_year["recommend"] == True]
-        df_filtered_by_review = df_filtered_by_recommend[df_filtered_by_recommend["review"] > 0]
-
-        # Muestra los 3 juegos mas recomendados
-        result = df_filtered_by_review.groupby(
-            ['id']).size().sort_values(ascending=False).head(3)
-        first_place = df_steam_games[df_steam_games['id']
-                                     == result.index[0]]['title'].values[0]
-        second_place = df_steam_games[df_steam_games['id']
-                                      == result.index[1]]['title'].values[0]
-        third_place = df_steam_games[df_steam_games['id']
-                                     == result.index[2]]['title'].values[0]
-        return [{"Puesto 1: ": first_place}, {"Puesto 2: ": second_place}, {"Puesto 3: ": third_place}]
+    if result:
+        return {
+            f"Los 3 juegos más recomendados para el año {year} son: {result[0][0]}, {result[1][0]} y {result[2][0]}."}
     else:
-        return {f"No se encontraron registros para el año {year}"}
+        return {
+            f"No se encontraron datos para el año {year} en la base de datos."}
