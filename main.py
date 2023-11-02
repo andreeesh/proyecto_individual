@@ -301,3 +301,47 @@ async def UsersNotRecommend(year: int):
     else:
         return {
             f"No se encontraron datos para el año {year} en la base de datos."}
+
+
+@app.get("/SentimentAnalysis/{year}")
+async def SentimentAnalysis(year: int):
+    # Según el año de lanzamiento, se devuelve una lista con la cantidad de registros de reseñas de usuarios
+    # que se encuentren categorizados con un análisis de sentimiento.
+    # Conectar a la base de datos SQLite
+    conn = sqlite3.connect('data_sources/steam.db')
+    cursor = conn.cursor()
+
+    # Ejecutar la consulta SQL
+    query = f"""
+    SELECT g.release_year, 
+           SUM(CASE WHEN u.review = 0 THEN 1 ELSE 0 END) as Negativa,
+           SUM(CASE WHEN u.review = 1 THEN 1 ELSE 0 END) as Neutral,
+           SUM(CASE WHEN u.review = 2 THEN 1 ELSE 0 END) as Positiva
+    FROM steam_games g
+    LEFT JOIN user_reviews u ON g.id = u.item_id
+    WHERE g.release_year = {year}
+    GROUP BY g.release_year
+    """
+
+    # Ejecutar la consulta y obtener resultados
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    # Cerrar la conexión
+    conn.close()
+
+    # Procesar los resultados
+    result = {}
+    for row in rows:
+        year = row[0]
+        negativa = row[1]
+        neutral = row[2]
+        positiva = row[3]
+        result[year] = {'Negativa': negativa,
+                        'Neutral': neutral, 'Positiva': positiva}
+
+    if result:
+        return result
+    else:
+        return {
+            f"No se encontraron datos para el año {year} en la base de datos."}
