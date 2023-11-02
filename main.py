@@ -1,25 +1,79 @@
 from fastapi import FastAPI
 import pandas as pd
-import pyarrow.parquet as pq
+import sqlite3
 
 app = FastAPI()
 
 
+@app.get("/EtlPlayTimeGenre")
+async def EtlPlayTimeGenre():
+    # Nombre del archivo de la base de datos
+    db_file = 'data_sources/steam.db'
+
+    # Nombre de la tabla en la base de datos
+    table_name = 'play_time_genre'
+
+    # Conexión a la base de datos
+    conn = sqlite3.connect(db_file)
+
+    # Abre el archivo steam_games.parquet y lo guarda en un dataframe
+    df_steam_games = pd.read_parquet(
+        "data_sources/parquet/steam_games.parquet", columns=['id', 'genres', 'release_year'])
+
+    # Abre el archivo users_items.parquet y lo guarda en un dataframe
+    df_users_items = pd.read_parquet(
+        "data_sources/parquet/users_items.parquet", columns=['item_id', 'playtime_forever'])
+
+    # Convierte los tipos de datos de las columnas
+    df_steam_games['id'] = df_steam_games['id'].astype(int)
+    df_steam_games['genres'] = df_steam_games['genres'].astype(str)
+    df_steam_games['release_year'] = df_steam_games['release_year'].astype(int)
+    df_users_items['item_id'] = df_users_items['item_id'].astype(int)
+    df_users_items['playtime_forever'] = df_users_items['playtime_forever'].astype(
+        int)
+
+    # Combina ambos dataframes
+    merged_df = df_steam_games.merge(
+        df_users_items, left_on='id', right_on='item_id', how='inner')
+
+    # Elimina la columna item_id
+    merged_df.drop(['item_id'], axis=1, inplace=True)
+
+    # Guardar el DataFrame en la base de datos SQLite
+    return merged_df.to_sql(table_name, conn, index=False, if_exists='replace')
+
+
 @app.get("/PlayTimeGenre/{genre}")
-def PlayTimeGenre(genre: str):
-    file = "data_sources/parquet/play_time_genre.parquet"
-    df_play_time = pq.read_table(source=file).to_pandas()
-    filtered_df = df_play_time.loc[df_play_time['genres'].str.contains(genre)]
+async def PlayTimeGenre(genre: str):
+    # Conectar a la base de datos SQLite
+    conn = sqlite3.connect('data_sources/steam.db')
+    cursor = conn.cursor()
 
-    df_play_time = None
+    # Ejecutar la consulta SQL
+    query = f"""
+        SELECT release_year, SUM(playtime_forever) AS total_playtime
+        FROM play_time_genre
+        WHERE genres LIKE '%{genre}%'
+        GROUP BY release_year
+        ORDER BY total_playtime DESC
+        LIMIT 1;
+    """
 
-    if not filtered_df.empty:
-        max_playtime_year = filtered_df.groupby(
-            'release_year')['playtime_forever'].sum().idxmax()
-        filtered_df = None
-        return f"El año de lanzamiento con la mayor cantidad de horas jugadas para el género {genre} es el {max_playtime_year}"
+    # Ejecutar la consulta y obtener resultados
+    cursor.execute(query)
+    result = cursor.fetchone()
+
+    # Cerrar la conexión
+    conn.close()
+
+    if result:
+        release_year = result[0]
+        tota_played_hours = result[1]
+        return {
+            f"El año de lanzamiento con más horas jugadas para el género '{genre}' es {release_year} con un total de {tota_played_hours} horas jugadas."}
     else:
-        return f"No se encontraron registros para el género {genre}"
+        return {
+            f"No se encontraron datos para el género '{genre}' en la base de datos."}
 
 
 @app.get("/UserForGenre/{genre}")
