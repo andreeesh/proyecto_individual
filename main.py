@@ -351,7 +351,7 @@ async def SentimentAnalysis(year: int):
 @app.get("/RecommendedGames/{id}")
 async def RecommendedGames(id: int):
     # Obtener el archivo parquet
-    model = pd.read_parquet("data_sources/parquet/model.parquet")
+    model = pd.read_parquet("data_sources/parquet/item_model.parquet")
     game = model[model['id'] == id]
 
     if game.empty:
