@@ -61,7 +61,3 @@ El proyecto incluye una serie de procesos ETL que se encargan de cargar, transfo
 ## Notas
 
 El proyecto hace uso de múltiples bibliotecas y tecnologías, tales como FastAPI para la creación de la API, Pandas para el manejo de datos, SQLite para la base de datos, entre otras.
-
----
-
-**Nota:** El README proporcionado es una estructura básica y es necesario completar con detalles adicionales, explicaciones más profundas sobre los procesos y cualquier otro detalle que se considere relevante. Además, se recomienda proporcionar información sobre la configuración del entorno, requisitos, y pasos para ejecutar y probar la API.
