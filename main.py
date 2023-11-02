@@ -1,46 +1,36 @@
 from fastapi import FastAPI
 import pandas as pd
 import sqlite3
+import pyarrow.parquet as pq
+import os
 
 app = FastAPI()
 
 
 @app.get("/EtlPlayTimeGenre")
 async def EtlPlayTimeGenre():
-    # Nombre del archivo de la base de datos
-    db_file = 'data_sources/steam.db'
+    # Conexión a la base de datos
+    conn = sqlite3.connect('data_sources/steam.db')
 
     # Nombre de la tabla en la base de datos
     table_name = 'play_time_genre'
 
-    # Conexión a la base de datos
-    conn = sqlite3.connect(db_file)
+    # Directorio que contiene los archivos Parquet
+    dir = 'data_sources/parquet/play_time_genre'
 
-    # Abre el archivo steam_games.parquet y lo guarda en un dataframe
-    df_steam_games = pd.read_parquet(
-        "data_sources/parquet/steam_games.parquet", columns=['id', 'genres', 'release_year'])
+    # Recorrer los archivos Parquet en el directorio
+    for file in os.listdir(dir):
+        if file.endswith('.parquet'):
+            # Leer el archivo Parquet
+            print(file)
+            df = pq.read_table(os.path.join(dir, file)).to_pandas()
 
-    # Abre el archivo users_items.parquet y lo guarda en un dataframe
-    df_users_items = pd.read_parquet(
-        "data_sources/parquet/users_items.parquet", columns=['item_id', 'playtime_forever'])
+            # Almacenar los datos en la base de datos SQLite
+            df.to_sql(table_name, conn, if_exists='append', index=False)
 
-    # Convierte los tipos de datos de las columnas
-    df_steam_games['id'] = df_steam_games['id'].astype(int)
-    df_steam_games['genres'] = df_steam_games['genres'].astype(str)
-    df_steam_games['release_year'] = df_steam_games['release_year'].astype(int)
-    df_users_items['item_id'] = df_users_items['item_id'].astype(int)
-    df_users_items['playtime_forever'] = df_users_items['playtime_forever'].astype(
-        int)
-
-    # Combina ambos dataframes
-    merged_df = df_steam_games.merge(
-        df_users_items, left_on='id', right_on='item_id', how='inner')
-
-    # Elimina la columna item_id
-    merged_df.drop(['item_id'], axis=1, inplace=True)
-
-    # Guardar el DataFrame en la base de datos SQLite
-    return merged_df.to_sql(table_name, conn, index=False, if_exists='replace')
+    # Confirmar y cerrar la conexión a la base de datos SQLite
+    conn.commit()
+    conn.close()
 
 
 @app.get("/PlayTimeGenre/{genre}")
