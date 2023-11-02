@@ -16,4 +16,4 @@ tzdata
 uvicorn
 pyarrow
 fastparquet
-sklearn
+scikit-learn
