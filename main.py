@@ -11,9 +11,7 @@ app = FastAPI()
 async def EtlPlayTimeGenre():
     # Conexión a la base de datos
     conn = sqlite3.connect('data_sources/steam.db')
-
-    # Nombre de la tabla en la base de datos
-    table_name = 'play_time_genre'
+    cursor = conn.cursor()
 
     # Directorio que contiene los archivos Parquet
     dir = 'data_sources/parquet/play_time_genre'
@@ -22,14 +20,18 @@ async def EtlPlayTimeGenre():
     for file in os.listdir(dir):
         if file.endswith('.parquet'):
             # Leer el archivo Parquet
-            print(file)
             df = pq.read_table(os.path.join(dir, file)).to_pandas()
 
             # Almacenar los datos en la base de datos SQLite
-            df.to_sql(table_name, conn, if_exists='append', index=False)
+            df.to_sql('play_time_genre', conn, if_exists='append', index=False)
 
     # Confirmar y cerrar la conexión a la base de datos SQLite
     conn.commit()
+
+    # Crear un índice en una tabla
+    cursor.execute('CREATE INDEX genres_index ON play_time_genre (genres);')
+
+    # Cerrar la conexión
     conn.close()
 
 
