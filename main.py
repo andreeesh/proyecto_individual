@@ -240,9 +240,7 @@ async def UserForGenre(genre: str):
 
 
 @app.get("/UsersRecommend/{year}")
-async def UsersRecommend(year: str):
-    # Muestra los 3 juegos mas recomendados para un año dado en la tabla user_reviews teniendo en cuenta que el campo recommend sea true
-    # y el campo review sea diferente de 1 trayendo el nombre del juego de la tabla steam_games
+async def UsersRecommend(year: int):
     # Conectar a la base de datos SQLite
     conn = sqlite3.connect('data_sources/steam.db')
     cursor = conn.cursor()
@@ -252,7 +250,7 @@ async def UsersRecommend(year: str):
 		SELECT steam_games.title
 		FROM user_reviews
 		INNER JOIN steam_games ON user_reviews.item_id = steam_games.id
-		WHERE user_reviews.recommend = true AND user_reviews.review != 1 AND user_reviews.posted LIKE '%{year}%'
+		WHERE user_reviews.recommend = true AND user_reviews.review > 0 AND user_reviews.posted LIKE '%{year}%'
 		GROUP BY user_reviews.item_id
 		ORDER BY COUNT(user_reviews.item_id) DESC
 		LIMIT 3;
@@ -268,6 +266,38 @@ async def UsersRecommend(year: str):
     if result:
         return {
             f"Los 3 juegos más recomendados para el año {year} son: {result[0][0]}, {result[1][0]} y {result[2][0]}."}
+    else:
+        return {
+            f"No se encontraron datos para el año {year} en la base de datos."}
+
+
+@app.get("/UsersNotRecommend/{year}")
+async def UsersNotRecommend(year: int):
+    # Conectar a la base de datos SQLite
+    conn = sqlite3.connect('data_sources/steam.db')
+    cursor = conn.cursor()
+
+    # Ejecutar la consulta SQL
+    query = f"""
+		SELECT steam_games.title
+		FROM user_reviews
+		INNER JOIN steam_games ON user_reviews.item_id = steam_games.id
+		WHERE user_reviews.recommend = false AND user_reviews.review = 0 AND user_reviews.posted LIKE '%{year}%'
+		GROUP BY user_reviews.item_id
+		ORDER BY COUNT(user_reviews.item_id) DESC
+		LIMIT 3;
+	"""
+
+    # Ejecutar la consulta y obtener resultados
+    cursor.execute(query)
+    result = cursor.fetchall()
+
+    # Cerrar la conexión
+    conn.close()
+
+    if result:
+        return {
+            f"Los 3 juegos menos recomendados para el año {year} son: {result[0][0]}, {result[1][0]} y {result[2][0]}."}
     else:
         return {
             f"No se encontraron datos para el año {year} en la base de datos."}
