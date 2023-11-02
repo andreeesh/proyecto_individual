@@ -3,8 +3,63 @@ import pandas as pd
 import sqlite3
 import pyarrow.parquet as pq
 import os
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
+
+
+@app.get("/", response_class=HTMLResponse)
+async def doc():
+    html = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Documentación de la API</title>
+            <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+			}
+            </style>
+        </head>
+        <body>
+            <h1>Documentación de la API</h1>
+            <p>Esta es la documentación para la API proporcionada.</p>
+        
+            <h2>Endpoints</h2>
+        
+            <h3>/StorePlayTimeGenre [GET]</h3>
+            <p>Descripción: Almacena datos de tiempo de juego por género en la base de datos.</p>
+        
+            <h3>/StoreSteamGames [GET]</h3>
+            <p>Descripción: Almacena datos de juegos de Steam en la base de datos.</p>
+        
+            <!-- Agrega documentación para otros endpoints -->
+        
+            <!-- Ejemplo de endpoints con parámetros -->
+            <h3>/PlayTimeGenre/{genre} [GET]</h3>
+            <p>Descripción: Obtiene el año de lanzamiento con más horas jugadas para un género específico.</p>
+            <p>Parámetros:</p>
+            <ul>
+                <li>genre (string): El género para el que se desea obtener información.</li>
+            </ul>
+        
+            <h3>/UserForGenre/{genre} [GET]</h3>
+            <p>Descripción: Obtiene al usuario con más horas jugadas para un género específico.</p>
+            <p>Parámetros:</p>
+            <ul>
+                <li>genre (string): El género para el que se desea obtener información.</li>
+            </ul>
+        
+            <h3>/UsersRecommend/{year} [GET]</h3>
+            <p>Descripción: Obtiene los 3 juegos más recomendados para un año específico.</p>
+            <p>Parámetros:</p>
+            <ul>
+                <li>year (string): El año del cual se desean obtener juegos recomendados.</li>
+            </ul>
+        </body>
+    </html>
+    """
+    return html
 
 
 @app.get("/StorePlayTimeGenre")
