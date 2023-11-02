@@ -16,3 +16,4 @@ tzdata
 uvicorn
 pyarrow
 fastparquet
+sklearn

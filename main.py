@@ -4,6 +4,9 @@ import sqlite3
 import pyarrow.parquet as pq
 import os
 from fastapi.responses import HTMLResponse
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
@@ -305,8 +308,6 @@ async def UsersNotRecommend(year: int):
 
 @app.get("/SentimentAnalysis/{year}")
 async def SentimentAnalysis(year: int):
-    # Según el año de lanzamiento, se devuelve una lista con la cantidad de registros de reseñas de usuarios
-    # que se encuentren categorizados con un análisis de sentimiento.
     # Conectar a la base de datos SQLite
     conn = sqlite3.connect('data_sources/steam.db')
     cursor = conn.cursor()
@@ -345,3 +346,40 @@ async def SentimentAnalysis(year: int):
     else:
         return {
             f"No se encontraron datos para el año {year} en la base de datos."}
+
+
+@app.get("/RecommendedGames/{id}")
+async def RecommendedGames(id: int):
+    # Obtener el archivo parquet
+    model = pd.read_parquet("data_sources/parquet/model.parquet")
+    game = model[model['id'] == id]
+
+    if game.empty:
+        return (f"El juego {id} no existe.")
+
+    # Obtiene el índice del juego
+    game_index = game.index[0]
+
+    # Ajusta la semilla aleatoria
+    sample = model.sample(n=2000, random_state=42)
+
+    # Calcula la similitud de contenido
+    scores = cosine_similarity(
+        [model.iloc[game_index, 3:]], sample.iloc[:, 3:])
+
+    # Obtiene las puntuaciones de similitud
+    scores = scores[0]
+
+    # Ordena los juegos por similitud de forma descendente
+    similar_games = [(i, scores[i])
+                     for i in range(len(scores)) if i != game_index]
+
+    similar_games = sorted(similar_games, key=lambda x: x[1], reverse=True)
+
+    # Obtiene los 5 juegos más similares
+    sg_indexes = [i[0] for i in similar_games[:5]]
+
+    # Lista de juegos similares (solo nombres)
+    sg_names = sample['app_name'].iloc[sg_indexes].tolist()
+
+    return {"similar_games": sg_names}
