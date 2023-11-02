@@ -2,6 +2,9 @@
 
 Este proyecto consiste en una API desarrollada con **FastAPI** para realizar análisis y consultas de datos relacionados con juegos de la plataforma Steam. La API se conecta a una base de datos SQLite y utiliza archivos Parquet para almacenar y procesar información. Permite realizar operaciones de almacenamiento, análisis de datos y recomendaciones de juegos.
 
+## Documentación en Swagger
+`https://app.swaggerhub.com/apis-docs/ROMCAPURRO_1/steam-data_api/1#/`
+
 ## Endpoints Principales
 
 ### Documentación de la API
