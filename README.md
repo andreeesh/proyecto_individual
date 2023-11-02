@@ -1,5 +1,3 @@
-Aquí tienes un archivo README con estilos para el proyecto proporcionado:
-
 # API de Análisis de Datos de Juegos de Steam
 
 Este proyecto consiste en una API desarrollada con **FastAPI** para realizar análisis y consultas de datos relacionados con juegos de la plataforma Steam. La API se conecta a una base de datos SQLite y utiliza archivos Parquet para almacenar y procesar información. Permite realizar operaciones de almacenamiento, análisis de datos y recomendaciones de juegos.
