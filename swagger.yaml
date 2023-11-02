@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Steam Data API
+  description: API to access and analyze Steam data
+  version: 1.0
+servers:
+  - url: http://localhost:8000
+paths:
+  /:
+    get:
+      summary: API Documentation
+      description: Return HTML documentation for the API.
+      responses:
+        '200':
+          description: HTML documentation
+          content:
+            text/html:
+              schema:
+                type: string
+  /StorePlayTimeGenre:
+    get:
+      summary: Store Play Time by Genre
+      description: Store playtime data by genre in the database.
+      responses:
+        '200':
+          description: Data stored successfully
+  /StoreSteamGames:
+    get:
+      summary: Store Steam Games
+      description: Store Steam games data in the database.
+      responses:
+        '200':
+          description: Data stored successfully
+  /StoreUserItems:
+    get:
+      summary: Store User Items
+      description: Store user items data in the database.
+      responses:
+        '200':
+          description: Data stored successfully
+  /StoreUserReviews:
+    get:
+      summary: Store User Reviews
+      description: Store user reviews data in the database.
+      responses:
+        '200':
+          description: Data stored successfully
+  /PlayTimeGenre/{genre}:
+    get:
+      summary: Play Time by Genre
+      description: Get the year of the most played genre and total playtime.
+      parameters:
+        - name: genre
+          in: path
+          description: The genre to obtain information about.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /UserForGenre/{genre}:
+    get:
+      summary: User for Genre
+      description: Get the user with the most playtime for a specific genre.
+      parameters:
+        - name: genre
+          in: path
+          description: The genre to obtain information about.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /UsersRecommend/{year}:
+    get:
+      summary: Users Recommend
+      description: Get the top 3 recommended games for a specific year.
+      parameters:
+        - name: year
+          in: path
+          description: The year to obtain recommended games for.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+  /UsersNotRecommend/{year}:
+    get:
+      summary: Users Not Recommend
+      description: Get the top 3 least recommended games for a specific year.
+      parameters:
+        - name: year
+          in: path
+          description: The year to obtain least recommended games for.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+  /SentimentAnalysis/{year}:
+    get:
+      summary: Sentiment Analysis
+      description: Analyze sentiment data for a specific year.
+      parameters:
+        - name: year
+          in: path
+          description: The year to analyze sentiment for.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+  /RecommendedGames/{id}:
+    get:
+      summary: Recommended Games
+      description: Get 5 games similar to the one with the provided ID.
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the game to find similar games for.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
