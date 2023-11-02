@@ -1,29 +1,17 @@
 from fastapi import FastAPI
 import pandas as pd
+import pyarrow.parquet as pq
 
 app = FastAPI()
 
 
 @app.get("/PlayTimeGenre/{genre}")
 def PlayTimeGenre(genre: str):
-    df_steam_games = pd.read_parquet(
-        "data_sources/parquet/steam_games.parquet", columns=['id', 'genres', 'release_year'])
-    df_users_items = pd.read_parquet(
-        "data_sources/parquet/users_items.parquet", columns=['item_id', 'playtime_forever'])
+    file = "data_sources/parquet/play_time_genre.parquet"
+    df_play_time = pq.read_table(source=file).to_pandas()
+    filtered_df = df_play_time.loc[df_play_time['genres'].str.contains(genre)]
 
-    df_steam_games['id'] = df_steam_games['id'].astype(int)
-    df_steam_games['genres'] = df_steam_games['genres'].astype(str)
-    df_users_items['item_id'] = df_users_items['item_id'].astype(int)
-
-    merged_df = df_steam_games.merge(
-        df_users_items, left_on='id', right_on='item_id', how='inner')
-
-    df_steam_games = None
-    df_users_items = None
-
-    filtered_df = merged_df.loc[merged_df['genres'].str.contains(genre)]
-
-    merged_df = None
+    df_play_time = None
 
     if not filtered_df.empty:
         max_playtime_year = filtered_df.groupby(
