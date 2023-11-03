@@ -15,19 +15,19 @@ Este proyecto consiste en una API desarrollada con **FastAPI** para realizar an�
 
 ### Consultas y Análisis
 
-- **Endpoint:** `/PlayTimeGenre/{genre}` [GET]
+- **Endpoint:** `https://proyecto-individual-dqlw.onrender.com/PlayTimeGenre/{genre}` [GET]
 - **Descripción:** Obtiene el año de lanzamiento con más horas jugadas para un género específico.
 
-- **Endpoint:** `/UserForGenre/{genre}` [GET]
+- **Endpoint:** `https://proyecto-individual-dqlw.onrender.com/UserForGenre/{genre}` [GET]
 - **Descripción:** Obtiene al usuario con más horas jugadas para un género específico.
 
-- **Endpoint:** `/UsersRecommend/{year}` [GET]
+- **Endpoint:** `https://proyecto-individual-dqlw.onrender.com/UsersRecommend/{year}` [GET]
 - **Descripción:** Obtiene los 3 juegos más recomendados para un año específico.
 
-- **Endpoint:** `/UsersNotRecommend/{year}` [GET]
+- **Endpoint:** `https://proyecto-individual-dqlw.onrender.com/UsersNotRecommend/{year}` [GET]
 - **Descripción:** Obtiene los 3 juegos menos recomendados para un año específico.
 
-- **Endpoint:** `/SentimentAnalysis/{year}` [GET]
+- **Endpoint:** `https://proyecto-individual-dqlw.onrender.com/SentimentAnalysis/{year}` [GET]
 - **Descripción:** Realiza análisis de sentimiento para un año específico.
 
 - **Endpoint:** `/RecommendedGames/{id}` [GET]

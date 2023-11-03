@@ -1,92 +1,92 @@
 openapi: 3.0.3
 info:
   title: Steam Data API
-  description: API to access and analyze Steam data
+  description: API para acceder y analizar datos de Steam
   version: '1'
 servers:
   - url: https://proyecto-individual-dqlw.onrender.com
 paths:
   /PlayTimeGenre/{genre}:
     get:
-      summary: Play Time by Genre
-      description: Get the year of the most played genre and total playtime.
+      summary: Tiempo de Juego por Género
+      description: Obtener el año del género más jugado y el tiempo total de juego.
       parameters:
         - name: genre
           in: path
-          description: The genre to obtain information about.
+          description: El género del que se desea obtener información.
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful response
+          description: Respuesta exitosa
   /UserForGenre/{genre}:
     get:
-      summary: User for Genre
-      description: Get the user with the most playtime for a specific genre.
+      summary: Usuario por Género
+      description: Obtener al usuario con más tiempo de juego para un género específico.
       parameters:
         - name: genre
           in: path
-          description: The genre to obtain information about.
+          description: El género del que se desea obtener información.
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful response
+          description: Respuesta exitosa
   /UsersRecommend/{year}:
     get:
-      summary: Users Recommend
-      description: Get the top 3 recommended games for a specific year.
+      summary: Usuarios Recomiendan
+      description: Obtener los 3 mejores juegos recomendados para un año específico.
       parameters:
         - name: year
           in: path
-          description: The year to obtain recommended games for.
+          description: El año del que se desean obtener juegos recomendados.
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Successful response
+          description: Respuesta exitosa
   /UsersNotRecommend/{year}:
     get:
-      summary: Users Not Recommend
-      description: Get the top 3 least recommended games for a specific year.
+      summary: Usuarios No Recomiendan
+      description: Obtener los 3 juegos menos recomendados para un año específico.
       parameters:
         - name: year
           in: path
-          description: The year to obtain least recommended games for.
+          description: El año del que se desean obtener juegos menos recomendados.
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Successful response
+          description: Respuesta exitosa
   /SentimentAnalysis/{year}:
     get:
-      summary: Sentiment Analysis
-      description: Analyze sentiment data for a specific year.
+      summary: Análisis de Sentimientos
+      description: Analizar datos de sentimiento para un año específico.
       parameters:
         - name: year
           in: path
-          description: The year to analyze sentiment for.
+          description: El año para analizar el sentimiento.
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Successful response
+          description: Respuesta exitosa
   /RecommendedGames/{id}:
     get:
-      summary: Recommended Games
-      description: Get 5 games similar to the one with the provided ID.
+      summary: Juegos Recomendados
+      description: Obtener 5 juegos similares al proporcionado por ID.
       parameters:
         - name: id
           in: path
-          description: The ID of the game to find similar games for.
+          description: El ID del juego para encontrar juegos similares.
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Successful response
+          description: Respuesta exitosa
