@@ -2,49 +2,10 @@ openapi: 3.0.3
 info:
   title: Steam Data API
   description: API to access and analyze Steam data
-  version: 1.0
+  version: '1'
 servers:
   - url: https://proyecto-individual-dqlw.onrender.com
 paths:
-  /:
-    get:
-      summary: API Documentation
-      description: Return HTML documentation for the API.
-      responses:
-        '200':
-          description: HTML documentation
-          content:
-            text/html:
-              schema:
-                type: string
-  /StorePlayTimeGenre:
-    get:
-      summary: Store Play Time by Genre
-      description: Store playtime data by genre in the database.
-      responses:
-        '200':
-          description: Data stored successfully
-  /StoreSteamGames:
-    get:
-      summary: Store Steam Games
-      description: Store Steam games data in the database.
-      responses:
-        '200':
-          description: Data stored successfully
-  /StoreUserItems:
-    get:
-      summary: Store User Items
-      description: Store user items data in the database.
-      responses:
-        '200':
-          description: Data stored successfully
-  /StoreUserReviews:
-    get:
-      summary: Store User Reviews
-      description: Store user reviews data in the database.
-      responses:
-        '200':
-          description: Data stored successfully
   /PlayTimeGenre/{genre}:
     get:
       summary: Play Time by Genre

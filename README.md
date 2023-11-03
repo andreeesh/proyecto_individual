@@ -12,20 +12,6 @@ Este proyecto consiste en una API desarrollada con **FastAPI** para realizar an�
 - **Descripción:** Muestra la documentación para los endpoints disponibles.
 
     **Endpoint:** `/` [GET]
-    
-### Almacenamiento de Datos (NO EJECUTAR)
-
-- **Endpoint:** `/StorePlayTimeGenre` [GET]
-- **Descripción:** Almacena datos de tiempo de juego por género en la base de datos.
-
-- **Endpoint:** `/StoreSteamGames` [GET]
-- **Descripción:** Almacena datos de juegos de Steam en la base de datos.
-
-- **Endpoint:** `/StoreUserItems` [GET]
-- **Descripción:** Almacena datos de elementos de usuarios en la base de datos.
-
-- **Endpoint:** `/StoreUserReviews` [GET]
-- **Descripción:** Almacena datos de reseñas de usuarios en la base de datos.
 
 ### Consultas y Análisis
 
@@ -55,7 +41,7 @@ El proyecto incluye una serie de procesos ETL que se encargan de cargar, transfo
 
 - **ETL australian_users_items.json:** Proceso de normalización y división del archivo JSON de elementos de usuarios para generar archivos Parquet.
 
-- **ETL australian_user_reviews.csv:** Proceso de análisis de sentimiento y transformación del archivo CSV de reseñas de usuarios para generar archivos Parquet.
+- **ETL australian_user_reviews.json:** Proceso de análisis de sentimiento y transformación del archivo CSV de reseñas de usuarios para generar archivos Parquet.
 
 - **Generación de Modelos:** Creación de archivos Parquet para modelado de juegos y análisis de similitud.
 
