@@ -13,7 +13,7 @@ Este proyecto consiste en una API desarrollada con **FastAPI** para realizar an�
 
     **Endpoint:** `/` [GET]
     
-### Almacenamiento de Datos
+### Almacenamiento de Datos (NO EJECUTAR)
 
 - **Endpoint:** `/StorePlayTimeGenre` [GET]
 - **Descripción:** Almacena datos de tiempo de juego por género en la base de datos.
